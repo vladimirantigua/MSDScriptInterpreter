@@ -9,12 +9,14 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
-#include "Header.h"
+#include "cmdline.h"
 #include "expr.h"
 #include "val.h"
 #include <sstream>
 #include <iomanip>
 #include "catch.h"
+#include "env.h"
+
 
 // to switch between MSDSCRIPT and TestGenerator program:
 //   click product then
@@ -31,7 +33,7 @@
 //parse_let (add other types later)
 
 // consume
-static void consume(std::istream &in, int expect);
+//static void consume(std::istream &in, int expect);
 
 //skit white spaces:
 static void skip_whitespace(std::istream &in);
@@ -57,7 +59,7 @@ static  PTR(Expr)parse_fun(std::istream &in);
 static std::string parse_keyword(std::istream &in);
 
 // Testing wrapper:
-static  PTR(Expr)parse_str(std::string s); //Expr *parse_str(std::string s)
+//static  PTR(Expr)parse_str(std::string s); //Expr *parse_str(std::string s)
 
 //parse_alphabetic - start with letter to help parse_expression that start with a letter
 static std::string parse_alphabetic(std::istream &in, std::string prefix);
@@ -97,7 +99,12 @@ PTR(Expr) parse_num(std::istream &in) { //#include "expr.h"
         int c = in.peek();
         if (isdigit(c)) {
             consume(in, c);
-            n = n*10 + (c - '0');// grammar for add
+            //cast to unsigned before adding and multiplying, since unsigned overflow is defined:
+            n = (unsigned)n*10 + (c - '0');// grammar for add
+            //check if there is an overflow:
+            if(n < 0){
+                throw std::runtime_error("Integer Overflow...! ");
+            }
         } else
             break;
     }
@@ -218,7 +225,7 @@ PTR(Expr) parse_var(std::istream &in){
 PTR(Expr)  parse_let(std::istream &in){
     //parse right handside:
     skip_whitespace(in);
-     //in.peek();
+    //in.peek();
     //    Expr *e = parse_multicand(in); // who should be consuming the _let // variable
     skip_whitespace(in);
     
@@ -230,7 +237,7 @@ PTR(Expr)  parse_let(std::istream &in){
     skip_whitespace(in); // check white space between variable and equal sign
     
     consume(in, '='); // consume equal here
- 
+    
     skip_whitespace(in);
     PTR(Expr) rhs = parse_comparg(in);
     //        PTR(Expr) rhs = parse_expr(in);
@@ -245,7 +252,7 @@ PTR(Expr)  parse_let(std::istream &in){
     skip_whitespace(in);
     PTR(Expr) body = parse_comparg(in); // getting the body
     //std::dynamic_pointer_cast   <T>    (e)
-    return NEW (LetExpr)((CAST(VarExpr)) (v), rhs, body); // casting a Variable* to _let t = 3 _in t + 2 = 5;
+    return NEW (LetExpr)(CAST(VarExpr) (v), rhs, body); // casting a Variable* to _let t = 3 _in t + 2 = 5;
     //_let〈variable〉=〈expr〉_in〈expr〉
     
 }
@@ -264,7 +271,7 @@ PTR(Expr)  parse_fun(std::istream &in){
     consume(in, ')'); // add left )
     skip_whitespace(in);
     PTR(Expr) body = parse_comparg(in); //〈expr〉
-
+    
     return NEW (FunExpr)(formal_arg->to_string(), body);
 }
 
@@ -313,9 +320,6 @@ static std::string parse_alphabetic(std::istream &in, std::string prefix) {
     return name;
 }
 
-
-
-
 // Expression Helper Method goes below everything related to Parse because it will be calling all the methods above:
 
 //parse_expr:
@@ -334,12 +338,11 @@ PTR(Expr) parse_expr(std::istream &in) {
         // we want to see what is inside the expression to see if we are parsing correctly:
         std::stringstream testing_parse_expr("");
         e->print(testing_parse_expr);
-        std::cout << " Testing PARSE_EXPR...... :)" + testing_parse_expr.str() << std::endl;
+//        std::cout << " Testing PARSE_EXPR...... :)" + testing_parse_expr.str() << std::endl;
         return NEW (EqExpr)(e, rhs);
     } else
         return e;
 }
-
 
 // Refactor parse_expr to  parse_comparg :
 PTR(Expr) parse_comparg(std::istream &in) { ///
@@ -379,135 +382,3 @@ PTR(Expr) parse_str(std::string s) {// wrapper for testing.
     
     return parse_expr(in);
 }
-
-// TEST for:
-//consume
-//skip_whitespace
-//parse_num (add other types later) - added
-//parse_add (add other types later)
-//parse_mult (add other types later)
-//parse_variable(add other types later)
-//parse_let (add other types later)
-
-TEST_CASE("parse_test") { //NEW (NumExpr)
-    CHECK( parse_str("10")->equals(NEW (NumExpr) (10))); // testing num
-    CHECK( parse_str("feb")->equals(NEW (VarExpr)("feb"))); // testing variable
-    CHECK( parse_str("-7")->equals(NEW (NumExpr) (-7))); // testing num
-    
-    PTR(Expr) ten_plus_one = NEW (AddExpr)(NEW (NumExpr)(10), NEW (NumExpr)(1));
-    CHECK( parse_str("10+1")->equals(ten_plus_one)); // testing expression Add
-    
-    PTR(Expr) five_mult_two = NEW (MultExpr)(NEW (NumExpr)(5), NEW (NumExpr)(2));
-    CHECK( parse_str("5*2")->equals(NEW (MultExpr)(NEW (NumExpr)(5), NEW (NumExpr)(2)))); // testing expression Mult
-    CHECK( parse_str(" 2 ")->equals(NEW (NumExpr)(2))); // testing whitespace
-    CHECK( parse_str(" (5) ")->equals(NEW (NumExpr)(5))); // testing whitespac
-    CHECK_THROWS_WITH(parse_str(" (8 "), "missing close parenthesis"); //
-    
-    //    CHECK_THROWS_WITH(consume(1, 0), "consume mismatch"); // see how to test consume
-    
-    
-    CHECK_THROWS_WITH(parse_str(" $ "), "invalid input"); //
-    CHECK_THROWS_WITH(parse_str(" _leete "), "invalid keyword is not a _if or _let or _true or _false or _fun" ); // "it should have an _let"
-    CHECK_THROWS_WITH(parse_str("_let x = 1 _innnN x + 2 "), "it should have an _in");//"it should have an _in"
-
-//_let f = _fun (x) x*x_in  f(2):
-    
-CHECK( parse_str("(_fun (x) x + 1)(10)")->interp()->equals(NEW (NumVal)(11))); // testing whitespace
-    //std::cout << parse_str("(_fun (x) x + 1)(10)")->interp() <<std::endl;
-    
-//Expr* parse_fun(std::istream &in){
-//_fun (〈variable〉)〈expr〉
-//
-//    //parse right handside:
-//    skip_whitespace(in);
-//    //_fun (x) x*x
-//    consume(in, '('); // add right (
-//    skip_whitespace(in);
-//    //std::string formal_arg:
-//    Expr *formal_arg = parse_var(in); // 〈variable〉 expression object but it is expecting a variable
-//    skip_whitespace(in);
-//    consume(in, ')'); // add left )
-//    skip_whitespace(in);
-//    Expr *body = parse_comparg(in); //〈expr〉
-//
-//    return NEW (FunExpr)(formal_arg->to_string(), body);
-//}
-
-    
-    std::istringstream in("123 ");
-    CHECK_THROWS_WITH(consume(in, '('), "consume mismatch"); // character '(' can be converted to ints but string cannot be converted to ints "("
-    //     testing for parse_let (add other types later)
-    //    _let x = 1 _ in x + 2
-    //
-    CHECK( parse_str("_let x = 1 _in x + 2 ")->equals(  (NEW (LetExpr)(NEW (VarExpr)("x"),
-                                                                     NEW (NumExpr)(1), NEW (AddExpr)(NEW (VarExpr)("x"), NEW (NumExpr)(2)))))); // testing whitespace
-    
-    // if not _then throw an error: "it should have a _then"
-    CHECK_THROWS_WITH( parse_str("_if _true _car _else 2 ")->equals( (NEW (IfExpr)(NEW (BoolExpr)(true),
-                                                                     NEW (NumExpr)(1), (NEW (NumExpr)((2)))))), "it should have a _then");
-    // left handside = "_if _false _then 2 _else 1 " match it to right hand side:
-    CHECK_THROWS_WITH( parse_str("_if _false _then 2 _basket 1 ")->equals( (NEW (IfExpr)(NEW (BoolExpr)(false),
-                                                                     NEW (NumExpr)(2), NEW (NumExpr)((1))))), "it should have a _else"); // testing whitespace
-    
-    // left handside = "_if _true _then 1 _else 2 " match it to right hand side:
-    CHECK( parse_str("_if _true _then 1 _else 2 ")->equals( (NEW (IfExpr)(NEW (BoolExpr)(true),
-                                                                     NEW (NumExpr)(1), NEW (NumExpr)((2)))))); // testing whitespace
-    
-    // left handside = "_if _false _then 2 _else 1 " match it to right hand side:
-    CHECK( parse_str("_if _false _then 2 _else 1 ")->equals( (NEW (IfExpr)(NEW (BoolExpr)(false),
-                                                                     NEW (NumExpr)(2), NEW (NumExpr)((1)))))); // testing whitespace
-    
-   
-    std::stringstream empty_string_string("");
-    CHECK( parse_str("1  == 1 ")->equals(  NEW (EqExpr)(NEW (NumExpr)(1), NEW (NumExpr)(1)))); // testing ==
-    parse_str("1  == 1 ")->print(empty_string_string);
-    std::cout << empty_string_string.str() << std::endl;
-    
-    
-    
-//     TEST_CASE("add_print") {
-//         AddExpr* add25 = NEW (AddExpr)r(NEW (VarExpr)("a"), NEW (VarExpr)("b"));
-//         std::stringstream empty_string_string(""); // empty but gets set to 5
-//         add25->print(empty_string_string);
-//         CHECK( (empty_string_string.str() == "(a+b)") );
-//
-//     }
-    
-    
-    //parse_expr:
-//    Expr *parse_expr(std::istream &in) {
-//        //    〈expr〉=〈comparg〉
-//        //            |〈comparg〉==〈expr
-//        Expr *e;
-//        e = parse_comparg(in);
-//
-//        skip_whitespace(in);
-//        int c = in.peek();
-//        if (c == '=') {
-//            consume(in, '='); //
-//            consume(in, '='); //
-//            Expr *rhs = parse_expr(in);
-//            return NEW (EqExpr)(e, rhs);
-//        } else
-//            return e;
-//    }
-//
-    
-    
-
-}
-
-
-
-
-
-
-
-
-
-
-
-//    Yes, Variable*v means that v is old pointer to memory that holds an object, while Variable v means that v holds the object directly. So, you really have to pick one of those and not mix them up. It doesn’t work to change old code from Variable* to Variable, because then anything the old code used to do is probably broken. In this course, we always use pointers to refer to objects of the classes we defined.
-//
-//    If you use Variable*v = parse_var() , then I bet you get an error about Variable* versus Expr*. But it’s ok to cast an Expr* to a Variable* if you know the object is a variable (which you do in the case of the result of parse_var).
-// ---------------------------

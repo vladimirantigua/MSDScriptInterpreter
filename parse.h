@@ -25,11 +25,14 @@
 // leave it normal
 class Expr; // this say that the class exist:
 
+class Env;
+
 // refactor PTR(Expr)
 PTR(Expr) parse_comparg(std::istream &in);
 
 
+PTR(Expr)parse_str(std::string s); //Expr *parse_str(std::string s)
 
-
+static void consume(std::istream &in, int expect);
 
 #endif /* parse_hpp */

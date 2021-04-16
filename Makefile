@@ -1,9 +1,11 @@
-INCS = Header.h expr.h catch.h parse.h val.h pointer.h
+INCS = cmdline.h expr.h parse.h val.h pointer.h env.h step.h cont.h
 INCSTEST = exec.h
-SRCS = main.cpp textHelp.cpp expr.cpp parse.cpp val.cpp
+SRCS = main.cpp cmdline.cpp test.cpp expr.cpp parse.cpp val.cpp env.cpp step.cpp cont.cpp
 SRCSTEST = test_msdscript.cpp exec.cpp
-msdscript: $(SRCS) $(INCS) ; c++ --std=c++14 -O2 -o msdscript $(SRCS)
+msdscript: $(SRCS) $(INCS) ; c++ --std=c++14 -O2 -fsanitize=undefined -fno-sanitize-recover=undefined -o msdscript $(SRCS)
 test_msdscript: $(SRCSTEST) $(INCSTEST) ; c++ --std=c++14 -O2 -o test_msdscript $(SRCSTEST)
 .PHONY: test
 test: msdscript
 	./msdscript --test
+
+

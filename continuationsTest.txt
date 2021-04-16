@@ -1,0 +1,20 @@
+
+_let countdown = _fun(countdown)
+                   _fun(n)
+                     _if n == 0
+                     _then 0
+                     _else countdown(countdown)(n + -1)
+_in countdown(countdown)(1000000)
+
+
+
+     =================== OR ==================
+
+
+
+_let factrl = _fun (factrl)
+                _fun (x)
+                  _if x == 1
+                  _then 1
+                  _else x * factrl(factrl)(x + -1)
+_in  factrl(factrl)(10)
