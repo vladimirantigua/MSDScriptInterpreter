@@ -36,7 +36,7 @@ TEST_CASE("equals"){
     PTR(Expr) num44 =  NEW (NumExpr)(23); // creating new Num object to assign memory for that object Making a pointer to the Expr class
     PTR(NumExpr) num45 = NEW (NumExpr)(23);
     CHECK(num45->equals(num44 ) == true);
-    
+    //false
     PTR(Expr) variable40 =  NEW (VarExpr)("this is variable"); // creating new Variable  object to assign memory for that object Making a pointer to the Expr class
     PTR(VarExpr) variable41 = NEW (VarExpr)("variable2");
     CHECK(variable41->equals(variable40 ) == false);
@@ -124,7 +124,6 @@ TEST_CASE("equals"){
 TEST_CASE("interp test"){
     //    CHECK( (5 == 6) == false);
     
-    //do all the interp like 518 and 519:
     
     PTR(NumExpr) Num2 = NEW (NumExpr)(333); // create new variable called num2 which is pointer to a Num object class it will have all the properties of the Num class
     // pass this into all interp(Env::empty) test cases:

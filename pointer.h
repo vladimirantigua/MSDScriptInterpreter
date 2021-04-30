@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#define USE_PLAIN_POINTERS 0 // When finish refactoring change the 1  to number 0
+#define USE_PLAIN_POINTERS 1 // When finish refactoring change the 1  to number 0
 // then run the leak
 // leaks -atExit -- ./msdscript --interp
 // 1+2
