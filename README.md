@@ -12,7 +12,7 @@
 
 #### MSDScript is a C++ program that is able to parse and interpret functions and loops,  calculate expressions such as: assigning variables, arithmetic operations add or multiply, and logical operations boolean, if, then and else. MSDScript can be used in two modes: as a MSDScript executable or as a library to be used on other applications. 
 
-> Eventhough MSDscript is not a very rich language at the moment—it doesn't even have subtraction—it's not far from the the kinds of languages that are embedded in applications. For example, someone implementing a calendar program might want to have a language for advanced users to caculate dates for repeated meetings (say, more sophisticated than “every Tuesday”), and MSDscript could just about work for that.
+> MSDscript is not a very rich language at the moment—it doesn't even have subtraction—it's not far from the the kinds of languages that are embedded in applications. For example, someone implementing a calendar program might want to have a language for advanced users to caculate dates for repeated meetings (say, more sophisticated than “every Tuesday”), and MSDscript could just about work for that.
 
 #### Please see the details on how to use MSDScript below.  
 
